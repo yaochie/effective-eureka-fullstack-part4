@@ -14,86 +14,101 @@ beforeEach(async () => {
   await Promise.all(promiseArray)
 })
 
-test('blogs are returned as JSON', async () => {
-  await api
-    .get('/api/blogs')
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
+describe('viewing all blogs', () => {
+  test('blogs are returned as JSON', async () => {
+    await api
+      .get('/api/blogs')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('all blogs are returned', async () => {
+    const response = await api.get('/api/blogs')
+
+    expect(response.body).toHaveLength(6)
+  })
+
+  test('all blogs have identifier id, which is unique', async () => {
+    const response = await api.get('/api/blogs')
+
+    response.body.forEach(blog => expect(blog.id).toBeDefined())
+  })
 })
 
-test('all blogs are returned', async () => {
-  const response = await api.get('/api/blogs')
+describe('blog creation', () => {
+  test('new blog is created', async () => {
+    const newBlog = {
+      title: 'New blogpost',
+      author: 'them',
+      url: 'does.not.exist',
+      likes: 0
+    }
 
-  expect(response.body).toHaveLength(6)
+    const savedBlog = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const savedId = savedBlog.body.id
+
+    // check that length has increased
+    const newBlogs = await helper.blogsInDb()
+    expect(newBlogs).toHaveLength(blogConsts.blogs.length + 1)
+
+    // check that new blog exists
+    const foundBlog = await newBlogs.find(blog => blog.id === savedId)
+
+    expect(foundBlog).toBeDefined()
+    expect(foundBlog.title).toEqual(newBlog.title)
+    expect(foundBlog.author).toEqual(newBlog.author)
+    expect(foundBlog.url).toEqual(newBlog.url)
+    expect(foundBlog.likes).toEqual(newBlog.likes)
+  })
+
+  test('default likes is 0', async () => {
+    const newBlog = {
+      title: 'New blogpost (2)',
+      author: 'us',
+      url: 'will.not.exist',
+    } 
+
+    const savedBlog = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const savedId = savedBlog.body.id
+
+    const newBlogs = await helper.blogsInDb()
+    const foundBlog = await newBlogs.find(blog => blog.id === savedId)
+
+    expect(foundBlog.likes).toEqual(0)
+  })
+
+  test('title and url required', async () => {
+    const newBlog = {
+      author: 'I',
+      likes: 100
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+  })
 })
 
-test('all blogs have identifier id, which is unique', async () => {
-  const response = await api.get('/api/blogs')
+describe('deletion of a blogpost', () => {
+  test('succeeds if id is valid', async () => {
+    const startBlogs = await helper.blogsInDb()
+    const blog = startBlogs[0]
 
-  response.body.forEach(blog => expect(blog.id).toBeDefined())
-})
-
-test('new blog is created', async () => {
-  const newBlog = {
-    title: 'New blogpost',
-    author: 'them',
-    url: 'does.not.exist',
-    likes: 0
-  }
-
-  const savedBlog = await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(201)
-    .expect('Content-Type', /application\/json/)
-
-  const savedId = savedBlog.body.id
-
-  // check that length has increased
-  const newBlogs = await helper.blogsInDb()
-  expect(newBlogs).toHaveLength(blogConsts.blogs.length + 1)
-
-  // check that new blog exists
-  const foundBlog = await newBlogs.find(blog => blog.id === savedId)
-
-  expect(foundBlog).toBeDefined()
-  expect(foundBlog.title).toEqual(newBlog.title)
-  expect(foundBlog.author).toEqual(newBlog.author)
-  expect(foundBlog.url).toEqual(newBlog.url)
-  expect(foundBlog.likes).toEqual(newBlog.likes)
-})
-
-test('default likes is 0', async () => {
-  const newBlog = {
-    title: 'New blogpost (2)',
-    author: 'us',
-    url: 'will.not.exist',
-  } 
-
-  const savedBlog = await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(201)
-    .expect('Content-Type', /application\/json/)
-
-  const savedId = savedBlog.body.id
-
-  const newBlogs = await helper.blogsInDb()
-  const foundBlog = await newBlogs.find(blog => blog.id === savedId)
-
-  expect(foundBlog.likes).toEqual(0)
-})
-
-test('title and url required', async () => {
-  const newBlog = {
-    author: 'I',
-    likes: 100
-  }
-
-  await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(400)
+    await api
+      .delete(`/api/blogs/${blog.id}`)
+      .expect(204)
+  })
 })
 
 afterAll(() => {
