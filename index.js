@@ -5,6 +5,8 @@ const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 
+const middleware = require('./utils/middleware')
+
 const blogSchema = mongoose.Schema({
   title: String,
   author: String,
@@ -37,6 +39,8 @@ app.post('/api/blogs', (request, response) => {
       response.status(201).json(result)
     })
 })
+
+app.use(middleware.unknownEndpoint)
 
 const PORT = process.env.PORT | 3003
 app.listen(PORT, () => {
