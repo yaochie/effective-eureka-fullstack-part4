@@ -41,21 +41,48 @@ test('new blog is created', async () => {
     likes: 0
   }
 
-  await api
+  const savedBlog = await api
     .post('/api/blogs')
     .send(newBlog)
     .expect(201)
     .expect('Content-Type', /application\/json/)
+
+  const savedId = savedBlog.body.id
 
   // check that length has increased
   const newBlogs = await helper.blogsInDb()
   expect(newBlogs).toHaveLength(blogConsts.blogs.length + 1)
 
   // check that new blog exists
-  expect(newBlogs.map(blog => blog.title)).toContain(newBlog.title)
-  expect(newBlogs.map(blog => blog.author)).toContain(newBlog.author)
+  const foundBlog = await newBlogs.find(blog => blog.id === savedId)
+
+  expect(foundBlog).toBeDefined()
+  expect(foundBlog.title).toEqual(newBlog.title)
+  expect(foundBlog.author).toEqual(newBlog.author)
+  expect(foundBlog.url).toEqual(newBlog.url)
+  expect(foundBlog.likes).toEqual(newBlog.likes)
 })
 
+test('default likes is 0', async () => {
+  const newBlog = {
+    title: 'New blogpost (2)',
+    author: 'us',
+    url: 'will.not.exist',
+  } 
+
+  const savedBlog = await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+  const savedId = savedBlog.body.id
+
+  const newBlogs = await helper.blogsInDb()
+  const foundBlog = await newBlogs.find(blog => blog.id === savedId)
+
+  expect(foundBlog.likes).toEqual(0)
+})
 
 afterAll(() => {
   mongoose.connection.close()
