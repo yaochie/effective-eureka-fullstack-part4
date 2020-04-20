@@ -59,11 +59,41 @@ describe('mostBlogs', () => {
       })
   })
 
-  test('of many blogs with single many authors is correct', () => {
+  test('of many blogs with many authors is correct', () => {
     expect(listHelper.mostBlogs(blogConsts.blogs))
       .toEqual({
         author: 'Robert C. Martin',
         blogs: 3
+      })
+  })
+})
+
+describe('mostLikes', () => {
+  test('of no blogs is null', () => {
+    expect(listHelper.mostLikes([])).toEqual(null)
+  })
+
+  test('of single blog is correct', () => {
+    expect(listHelper.mostLikes(blogConsts.single_blog))
+      .toEqual({
+        author: 'me',
+        likes: 5
+      })
+  })
+
+  test('of single author is correct', () => {
+    expect(listHelper.mostLikes(blogConsts.three_blogs))
+      .toEqual({
+        author: 'me',
+        likes: 28
+      })
+  })
+
+  test('of many blogs with many authors is correct', () => {
+    expect(listHelper.mostLikes(blogConsts.blogs))
+      .toEqual({
+        author: 'Edsger W. Dijkstra',
+        likes: 17
       })
   })
 })

@@ -50,10 +50,37 @@ const mostBlogs = (blogs) => {
   return max
 }
 
+const mostLikes = (blogs) => {
+  if (blogs.length === 0) {
+    return null
+  }
+
+  const reducer = (counts, blog) => {
+    if (counts.has(blog.author)) {
+      counts.set(blog.author, counts.get(blog.author) + blog.likes)
+    } else {
+      counts.set(blog.author, blog.likes)
+    }
+    return counts
+  }
+
+  const authorLikes = blogs.reduce(reducer, new Map())
+
+  let max = { author: '', likes: 0 }
+  for (let [key, value] of authorLikes.entries()) {
+    if (value > max.likes) {
+      max = { author: key, likes: value }
+    }
+  }
+
+  return max
+}
+
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }
 
