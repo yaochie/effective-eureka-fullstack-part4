@@ -1,4 +1,5 @@
 const listHelper = require('../utils/list_helper')
+const blogConsts = require('./blogs_for_test')
 
 test('dummy returns one', () => {
   const blogs = []
@@ -9,54 +10,61 @@ test('dummy returns one', () => {
 
 describe('totalLikes', () => {
   test('of no blogs is zero', () => {
-    const blogs = []
-
-    expect(listHelper.totalLikes(blogs)).toBe(0)
+    expect(listHelper.totalLikes([])).toBe(0)
   })
 
   test('of one blog is correct', () => {
-    const blogs = [
-      {
-        '_id': '5e9dc763930ba00427236b1f',
-        'title': 'My First Post',
-        'author': 'me',
-        'url': 'stuff.me',
-        'likes': 5,
-        '__v': 0
-      },
-    ]
-
-    expect(listHelper.totalLikes(blogs)).toBe(5)
+    expect(listHelper.totalLikes(blogConsts.single_blog)).toBe(5)
   })
 
   test('of many blogs is correct', () => {
-    const blogs = [
-      {
-        '_id': '5e9dc763930ba00427236b1f',
-        'title': 'My First Post',
-        'author': 'me',
-        'url': 'stuff.me',
-        'likes': 5,
-        '__v': 0
-      },
-      {
-        '_id': '5e9dc7da930ba00427236b20',
-        'title': 'My Second Post',
-        'author': 'me',
-        'url': 'morestuff.me',
-        'likes': 10,
-        '__v': 0
-      },
-      {
-        '_id': '5e9dcda54346da156bcaf8d9',
-        'title': 'My Third Post',
-        'author': 'me',
-        'url': 'evenmorestuff.me',
-        'likes': 13,
-        '__v': 0
-      }
-    ]
-
-    expect(listHelper.totalLikes(blogs)).toBe(28)
+    expect(listHelper.totalLikes(blogConsts.three_blogs)).toBe(28)
   })
 })
+
+describe('favoriteBlog', () => {
+  test('of zero blogs is null', () => {
+    expect(listHelper.favoriteBlog([])).toEqual(null)
+  })
+
+  test('of one blog is correct', () => {
+    expect(listHelper.favoriteBlog(blogConsts.single_blog))
+      .toEqual(blogConsts.single_blog[0])
+  })
+
+  test('of many blogs is correct', () => {
+    expect(listHelper.favoriteBlog(blogConsts.three_blogs))
+      .toEqual(blogConsts.three_blogs[1])
+  })
+})
+
+describe('mostBlogs', () => {
+  test('of no blogs is null', () => {
+    expect(listHelper.mostBlogs([])).toEqual(null)
+  })
+
+  test('of single blog is correct', () => {
+    expect(listHelper.mostBlogs(blogConsts.single_blog))
+      .toEqual({
+        author: 'me',
+        blogs: 1
+      })
+  })
+
+  test('of many blogs with single author is correct', () => {
+    expect(listHelper.mostBlogs(blogConsts.three_blogs))
+      .toEqual({
+        author: 'me',
+        blogs: 3
+      })
+  })
+
+  test('of many blogs with single many authors is correct', () => {
+    expect(listHelper.mostBlogs(blogConsts.blogs))
+      .toEqual({
+        author: 'Robert C. Martin',
+        blogs: 3
+      })
+  })
+})
+
