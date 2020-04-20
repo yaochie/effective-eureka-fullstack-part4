@@ -5,6 +5,7 @@ const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
 
+const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
 
 const blogSchema = mongoose.Schema({
@@ -44,5 +45,5 @@ app.use(middleware.unknownEndpoint)
 
 const PORT = process.env.PORT | 3003
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  logger.info(`Server running on port ${PORT}`)
 })
