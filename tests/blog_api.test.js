@@ -6,6 +6,8 @@ const blogConsts = require('./blogs_for_test')
 const helper = require('./test_helper')
 const api = supertest(app)
 
+mongoose.set('useFindAndModify', false)
+
 beforeEach(async () => {
   await Blog.deleteMany({})
 
@@ -71,7 +73,7 @@ describe('blog creation', () => {
       title: 'New blogpost (2)',
       author: 'us',
       url: 'will.not.exist',
-    } 
+    }
 
     const savedBlog = await api
       .post('/api/blogs')
@@ -108,6 +110,25 @@ describe('deletion of a blogpost', () => {
     await api
       .delete(`/api/blogs/${blog.id}`)
       .expect(204)
+  })
+})
+
+describe('updating a blogpost', () => {
+  test('succeeds', async () => {
+    const startBlogs = await helper.blogsInDb()
+    const blog = startBlogs[0]
+
+    const updatedBlog = {
+      ...blog,
+      likes: blog.likes + 1
+    }
+
+    const newBlog = await api
+      .put(`/api/blogs/${blog.id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    expect(newBlog.body.likes).toEqual(blog.likes + 1)
   })
 })
 
