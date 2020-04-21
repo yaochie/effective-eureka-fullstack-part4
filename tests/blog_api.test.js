@@ -1,7 +1,9 @@
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const blogConsts = require('./blogs_for_test')
 const helper = require('./test_helper')
 const api = supertest(app)
@@ -9,9 +11,19 @@ const api = supertest(app)
 mongoose.set('useFindAndModify', false)
 
 beforeEach(async () => {
+  // delete all blogs, delete all users
   await Blog.deleteMany({})
+  await User.deleteMany({})
 
-  const blogObjects = blogConsts.blogs.map(blog => new Blog(blog))
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'root', passwordHash })
+
+  await user.save()
+
+  // add all blogs as root
+  const blogObjects = blogConsts.blogs.map(blog => {
+    return new Blog({ ...blog, user: user._id })
+  })
   const promiseArray = blogObjects.map(blog => blog.save())
   await Promise.all(promiseArray)
 })
@@ -37,6 +49,18 @@ describe('viewing all blogs', () => {
   })
 })
 
+const getUserToken = async () => {
+  const userInfo = {
+    username: 'root',
+    password: 'sekret'
+  }
+  const response = await api
+    .post('/api/login')
+    .send(userInfo)
+
+  return response.body.token
+}
+
 describe('blog creation', () => {
   test('new blog is created', async () => {
     const newBlog = {
@@ -46,8 +70,12 @@ describe('blog creation', () => {
       likes: 0
     }
 
+    // get token
+    const token = await getUserToken()
+
     const savedBlog = await api
       .post('/api/blogs')
+      .set('Authorization', `bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -75,8 +103,10 @@ describe('blog creation', () => {
       url: 'will.not.exist',
     }
 
+    const token = await getUserToken()
     const savedBlog = await api
       .post('/api/blogs')
+      .set('Authorization', `bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -95,8 +125,10 @@ describe('blog creation', () => {
       likes: 100
     }
 
+    const token = await getUserToken()
     await api
       .post('/api/blogs')
+      .set('Authorization', `bearer ${token}`)
       .send(newBlog)
       .expect(400)
   })
@@ -107,8 +139,10 @@ describe('deletion of a blogpost', () => {
     const startBlogs = await helper.blogsInDb()
     const blog = startBlogs[0]
 
+    const token = await getUserToken()
     await api
       .delete(`/api/blogs/${blog.id}`)
+      .set('Authorization', `bearer ${token}`)
       .expect(204)
   })
 })

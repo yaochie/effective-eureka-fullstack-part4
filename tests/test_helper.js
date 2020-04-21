@@ -6,5 +6,5 @@ const blogsInDb = async () => {
 }
 
 module.exports = {
-  blogsInDb
+  blogsInDb,
 }
