@@ -9,17 +9,9 @@ blogsRouter.get('/', async (request, response) => {
   return response.json(blogs.map(blog => blog.toJSON()))
 })
 
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-
 blogsRouter.post('/', async (request, response, next) => {
   // authenticate
-  const authToken = getTokenFrom(request)
+  const authToken = request.token
   const decodedToken = authToken === null
     ? null
     : jwt.verify(authToken, process.env.SECRET)
