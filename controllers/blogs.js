@@ -35,13 +35,13 @@ blogsRouter.post('/', async (request, response, next) => {
     user: user._id
   })
 
-  // add blog to user's blogs
-  user.blogs = user.blogs.concat(blog)
-  await user.save()
-
   try {
     const result = await blog.save()
     response.status(201).json(result.toJSON())
+
+    // add blog to user's blogs
+    user.blogs = user.blogs.concat(blog)
+    await user.save()
   } catch(exception) {
     response.status(400).end()
     next(exception)
@@ -70,7 +70,7 @@ blogsRouter.delete('/:id', async (request, response, next) => {
   }
 
   // check that user is creator of blog
-  if (!(blog.user.toString() === user._id.toString())) {
+  if (blog.user === undefined || !(blog.user.toString() === user._id.toString())) {
     return response.status(401).json({ error: 'blog can only be deleted by creator' })
   }
 
