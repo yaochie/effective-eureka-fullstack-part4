@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt')
 const app = require('../app')
 
 const User = require('../models/user')
-const helper = require('./test_helper')
 const api = supertest(app)
 
 describe('creating new user when at least one user already exists', () => {
